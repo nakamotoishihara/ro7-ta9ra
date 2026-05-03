@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>Study Timer</title>
+<style>
+  body {
+    font-family: Arial;
+    text-align: center;
+    background: #111;
+    color: #0f0;
+  }
+  h1 { margin-top: 20px; }
+  #display {
+    font-size: 40px;
+    margin: 20px;
+  }
+  input, button {
+    margin: 5px;
+    padding: 10px;
+    font-size: 16px;
+  }
+</style>
+</head>
+<body>
+
+<h1>📚 مؤقّت الدراسة</h1>
+
+<div id="display">00:00:00.000</div>
+
+<input type="number" id="startValue" placeholder="ابدأ من (ثواني)">
+<input type="number" id="countdownValue" placeholder="عد تنازلي (ثواني)">
+<input type="number" id="precision" placeholder="الدقة (مثلا 0.1)" value="0.1">
+
+<br>
+
+<button onclick="start()">▶️ بدء</button>
+<button onclick="stop()">⛔ إيقاف</button>
+<button onclick="reset()">🔄 تصفير</button>
+<button onclick="countdown()">⏳ عد تنازلي</button>
+<button onclick="showTotal()">📊 الإجمالي</button>
+
+<script>
+let startTime = 0;
+let elapsed = 0;
+let running = false;
+let interval = null;
+let sessions = [];
+
+function formatTime(seconds) {
+  let ms = Math.floor((seconds % 1) * 1000);
+  let s = Math.floor(seconds) % 60;
+  let m = Math.floor(seconds / 60) % 60;
+  let h = Math.floor(seconds / 3600);
+  return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}.${ms.toString().padStart(3,'0')}`;
+}
+
+function start() {
+  if (running) return;
+
+  let startVal = parseFloat(document.getElementById("startValue").value) || 0;
+  let precision = parseFloat(document.getElementById("precision").value) || 0.1;
+
+  startTime = performance.now() / 1000 - startVal;
+  running = true;
+
+  interval = setInterval(() => {
+    elapsed = performance.now() / 1000 - startTime;
+    document.getElementById("display").textContent = formatTime(elapsed);
+  }, precision * 1000);
+}
+
+function stop() {
+  if (!running) return;
+  running = false;
+  clearInterval(interval);
+  sessions.push(elapsed);
+  alert("تم تسجيل جلسة: " + formatTime(elapsed));
+}
+
+function reset() {
+  running = false;
+  clearInterval(interval);
+  elapsed = 0;
+  sessions = [];
+  document.getElementById("display").textContent = "00:00:00.000";
+}
+
+function countdown() {
+  let seconds = parseFloat(document.getElementById("countdownValue").value);
+  let precision = parseFloat(document.getElementById("precision").value) || 0.1;
+
+  if (!seconds) return alert("أدخل قيمة العد التنازلي");
+
+  let start = performance.now() / 1000;
+
+  let cd = setInterval(() => {
+    let now = performance.now() / 1000;
+    let remaining = Math.max(0, seconds - (now - start));
+
+    document.getElementById("display").textContent = formatTime(remaining);
+
+    if (remaining <= 0) {
+      clearInterval(cd);
+      alert("⏰ انتهى الوقت!");
+    }
+  }, precision * 1000);
+}
+
+function showTotal() {
+  let total = sessions.reduce((a,b)=>a+b,0);
+  alert("📊 الوقت الإجمالي: " + formatTime(total));
+}
+</script>
+
+</body>
+</html>
